@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SMS Forwarder Admin</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=4" />
   </head>
   <body>
     <div id="loginView" class="auth">
@@ -27,10 +27,14 @@
           <h1>SMS Forwarder Admin</h1>
           <p class="sub">
             Status: <span id="status" class="err">Connecting..</span>
+            · <span id="statusDetail" class="hint">Loading…</span>
             · Messages are kept in this browser
           </p>
         </div>
-        <button id="logoutBtn" class="ghost" type="button">Sign out</button>
+        <div class="row">
+          <button id="reloadBtn" class="ghost" type="button">Reload</button>
+          <button id="logoutBtn" class="ghost" type="button">Sign out</button>
+        </div>
       </header>
 
       <main>
@@ -64,6 +68,6 @@
       </main>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=4"></script>
   </body>
 </html>
