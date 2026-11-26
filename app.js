@@ -199,8 +199,20 @@ async function poll() {
       cache: 'no-store',
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const payload = await response.json();
-    const items = (Array.isArray(payload) ? payload : [payload]).filter((item) => item && item.id);
+    // ntfy returns newline-delimited JSON (one object per line), not a JSON array.
+    const text = await response.text();
+    const items = text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        try {
+          return JSON.parse(line);
+        } catch (_) {
+          return null;
+        }
+      })
+      .filter((item) => item && item.id);
     const known = new Set(messages.map((m) => m.id));
     let added = 0;
 
