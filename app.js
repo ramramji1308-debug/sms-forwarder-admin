@@ -1,14 +1,13 @@
 'use strict';
 
-/* Private GitHub Pages admin panel. No backend server required. */
-const TOPIC_URL = 'https://ntfy.sh/smsfwd-ramramji-7d4e9a3c61b24f8e';
-const USERNAME = 'admin';
-const PASSWORD = 'SmsAdmin@2026';
+/* GitHub Pages admin panel. No backend server required. */
+const AUTH_HASH = 'c0d5f54f5c5e7b0878526953e346ca580af331519cf0d405f9ac1ed85de5896d';
 const POLL_MS = 5000;
 
 const CHANNELS_KEY = 'smsfwd_channels_v1';
 const MESSAGES_KEY = 'smsfwd_messages_v1';
 const AUTH_KEY = 'smsfwd_auth_v1';
+const TOPIC_KEY_NAME = 'smsfwd_topic_v1';
 
 const $ = (id) => document.getElementById(id);
 
@@ -16,6 +15,7 @@ let channels = load(CHANNELS_KEY, []);
 let messages = load(MESSAGES_KEY, []);
 let channelFilter = 'all';
 let query = '';
+let topicUrl = '';
 let timer = null;
 
 function load(key, fallback) {
@@ -29,6 +29,14 @@ function load(key, fallback) {
 
 function save(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+async function sha256(text) {
+  const data = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 function el(tag, className, text) {
@@ -53,11 +61,15 @@ function readableTime(value) {
 
 /* ------------------------------------------------------------------ auth */
 
-function tryLogin() {
+async function tryLogin() {
   const user = $('username').value.trim();
   const pass = $('password').value;
-  if (user === USERNAME && pass === PASSWORD) {
+  const digest = await sha256(`${user}:${pass}`);
+  if (digest === AUTH_HASH) {
+    const topicKey = await sha256(`topic:${pass}`);
+    topicUrl = `https://ntfy.sh/smsfwd-${topicKey.slice(0, 24)}`;
     sessionStorage.setItem(AUTH_KEY, '1');
+    sessionStorage.setItem(TOPIC_KEY_NAME, topicUrl);
     $('loginError').textContent = '';
     showApp();
   } else {
@@ -67,6 +79,8 @@ function tryLogin() {
 
 function logout() {
   sessionStorage.removeItem(AUTH_KEY);
+  sessionStorage.removeItem(TOPIC_KEY_NAME);
+  topicUrl = '';
   clearInterval(timer);
   $('appView').classList.add('hidden');
   $('loginView').classList.remove('hidden');
@@ -181,7 +195,7 @@ function renderChannels() {
 
 async function poll() {
   try {
-    const response = await fetch(`${TOPIC_URL}/json?poll=1`, { cache: 'no-store' });
+    const response = await fetch(`${topicUrl}/json?poll=1`, { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const items = await response.json();
     const known = new Set(messages.map((m) => m.id));
@@ -306,4 +320,7 @@ $('clearBtn').addEventListener('click', () => {
   renderMessages();
 });
 
-if (sessionStorage.getItem(AUTH_KEY) === '1') showApp();
+if (sessionStorage.getItem(AUTH_KEY) === '1' && sessionStorage.getItem(TOPIC_KEY_NAME)) {
+  topicUrl = sessionStorage.getItem(TOPIC_KEY_NAME);
+  showApp();
+}
