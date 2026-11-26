@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>XPay Admin</title>
+  <link rel="stylesheet" href="style.css?v=1"/>
+</head>
+<body>
+  <div id="login" class="card">
+    <h1>XPay Admin</h1>
+    <p>Connect to your XPay backend to control app data.</p>
+    <label>API base URL</label>
+    <input id="apiBase" placeholder="https://api.xpay-app.com/app"/>
+    <label>Admin token</label>
+    <input id="token" type="password" placeholder="Bearer token"/>
+    <label>Username</label>
+    <input id="user" placeholder="admin"/>
+    <label>Password</label>
+    <input id="pass" type="password"/>
+    <button id="loginBtn">Connect</button>
+    <p id="loginError" class="error"></p>
+  </div>
+
+  <div id="app" class="hidden">
+    <header>
+      <h1>XPay Admin</h1>
+      <div>
+        <span id="conn">Offline</span>
+        <button id="refresh">Refresh</button>
+        <button id="logout">Disconnect</button>
+      </div>
+    </header>
+    <nav>
+      <button data-section="users" class="active">Users</button>
+      <button data-section="deposits">Deposits</button>
+      <button data-section="withdrawals">Withdrawals</button>
+      <button data-section="bets">Bets</button>
+      <button data-section="games">Games</button>
+      <button data-section="settings">Settings</button>
+    </nav>
+    <section id="panel">
+      <div class="card">
+        <h2 id="sectionTitle">Users</h2>
+        <p id="sectionInfo" class="muted">Loading data from your API…</p>
+        <table><thead id="thead"></thead><tbody id="tbody"></tbody></table>
+      </div>
+    </section>
+  </div>
+  <script src="app.js?v=1"></script>
+</body>
+</html>
