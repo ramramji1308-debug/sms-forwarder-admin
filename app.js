@@ -195,7 +195,9 @@ function renderChannels() {
 
 async function poll() {
   try {
-    const response = await fetch(`${topicUrl}/json?poll=1`, { cache: 'no-store' });
+    const response = await fetch(`${topicUrl}/json?poll=1&_=${Date.now()}`, {
+      cache: 'no-store',
+    });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     const items = (Array.isArray(payload) ? payload : [payload]).filter((item) => item && item.id);
@@ -237,9 +239,12 @@ async function poll() {
 
     $('status').textContent = 'online';
     $('status').className = 'ok';
-  } catch (_) {
+    $('statusDetail').textContent =
+      `${messages.length} message${messages.length === 1 ? '' : 's'} stored`;
+  } catch (error) {
     $('status').textContent = 'Connecting..';
     $('status').className = 'err';
+    $('statusDetail').textContent = `Last error: ${error.message || 'network'}`;
   }
 }
 
@@ -301,6 +306,7 @@ $('username').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') $('password').focus();
 });
 $('logoutBtn').addEventListener('click', logout);
+$('reloadBtn').addEventListener('click', () => window.location.reload(true));
 $('createChannelBtn').addEventListener('click', createChannel);
 $('channelName').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') createChannel();
