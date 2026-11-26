@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SMS Forwarder Admin</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="loginView" class="auth">
+      <div class="auth-card">
+        <div class="brand">📨</div>
+        <h1>SMS Forwarder</h1>
+        <p class="sub">Admin panel · V2.4.0-sms</p>
+        <label for="username">Username</label>
+        <input id="username" type="text" autocomplete="username" placeholder="admin" />
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+        <button id="loginBtn" class="primary" type="button">Sign in</button>
+        <p id="loginError" class="error"></p>
+      </div>
+    </div>
+
+    <div id="appView" class="app hidden">
+      <header class="topbar">
+        <div>
+          <h1>SMS Forwarder Admin</h1>
+          <p class="sub">
+            Status: <span id="status" class="err">Connecting..</span>
+            · Messages are kept in this browser
+          </p>
+        </div>
+        <button id="logoutBtn" class="ghost" type="button">Sign out</button>
+      </header>
+
+      <main>
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Channels</h2>
+            <span class="hint">Create a code, then enter it in the app</span>
+          </div>
+          <div class="row">
+            <input id="channelName" type="text" placeholder="Channel name (optional), e.g. Phone 2" />
+            <button id="createChannelBtn" class="primary" type="button">Create channel code</button>
+          </div>
+          <div id="channelList" class="channel-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Messages</h2>
+            <span id="stats" class="hint"></span>
+          </div>
+          <div class="row">
+            <input id="search" type="search" placeholder="Search sender or message…" />
+            <select id="channelFilter">
+              <option value="all">All channels</option>
+            </select>
+            <button id="refreshBtn" class="ghost" type="button">Refresh</button>
+            <button id="clearBtn" class="danger" type="button">Delete all</button>
+          </div>
+          <div id="messages" class="messages"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
