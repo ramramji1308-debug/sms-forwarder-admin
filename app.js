@@ -197,7 +197,8 @@ async function poll() {
   try {
     const response = await fetch(`${topicUrl}/json?poll=1`, { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const items = await response.json();
+    const payload = await response.json();
+    const items = (Array.isArray(payload) ? payload : [payload]).filter((item) => item && item.id);
     const known = new Set(messages.map((m) => m.id));
     let added = 0;
 
