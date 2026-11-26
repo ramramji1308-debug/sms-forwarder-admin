@@ -70,4 +70,4 @@ async function load() {
   }
 }
 
-if (cfg.apiBase && cfg.token) { $('pass').value = cfg.pass || ''; showApp(); load(); }
+// Do not auto-login: the backend password must be entered each time.
