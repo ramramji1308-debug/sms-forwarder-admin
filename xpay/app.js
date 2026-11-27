@@ -7,6 +7,9 @@ const SECTIONS = {
   settings: { path: '/settings', cols: ['key', 'value'] },
 };
 
+const AUTH_USER = 'admin';
+const AUTH_HASH = '07996431636d427da4dcec62a8ad530932b776f0ae37a3287cdf308bfb669c06'; // SHA-256 of XPayAdmin@2026
+
 const $ = (id) => document.getElementById(id);
 let cfg = JSON.parse(localStorage.getItem('xpay-admin') || '{}');
 let section = 'users';
@@ -15,16 +18,23 @@ $('apiBase').value = cfg.apiBase || '';
 $('token').value = cfg.token || '';
 $('user').value = cfg.user || '';
 
-function save() {
-  cfg = { apiBase: $('apiBase').value.trim(), token: $('token').value.trim(), user: $('user').value.trim() };
-  localStorage.setItem('xpay-admin', JSON.stringify(cfg));
+async function sha256(text) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 function showApp() { $('login').classList.add('hidden'); $('app').classList.remove('hidden'); }
 
-$('loginBtn').onclick = () => {
-  save();
-  if (!cfg.apiBase || !cfg.pass) { $('loginError').textContent = 'Enter the API URL and password.'; return; }
-  cfg.pass = $('pass').value;
+$('loginBtn').onclick = async () => {
+  $('loginError').textContent = '';
+  const user = $('user').value.trim();
+  const pass = $('pass').value;
+  const apiBase = $('apiBase').value.trim();
+  if (user !== AUTH_USER || (await sha256(pass)) !== AUTH_HASH) {
+    $('loginError').textContent = 'Invalid username or password.';
+    return;
+  }
+  cfg = { apiBase, token: $('token').value.trim(), user };
+  localStorage.setItem('xpay-admin', JSON.stringify(cfg));
   showApp();
   load();
 };
