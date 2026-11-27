@@ -1,39 +1,67 @@
 const SECTIONS = {
-  users: { path: '/users', cols: ['id', 'phone', 'balance', 'status'] },
-  deposits: { path: '/deposits', cols: ['id', 'userId', 'amount', 'status', 'createdAt'] },
-  withdrawals: { path: '/withdrawals', cols: ['id', 'userId', 'amount', 'status', 'createdAt'] },
-  bets: { path: '/bets', cols: ['id', 'userId', 'game', 'amount', 'result'] },
-  games: { path: '/games', cols: ['id', 'name', 'enabled', 'config'] },
-  settings: { path: '/settings', cols: ['key', 'value'] },
+  users: { cols: ['id', 'phone', 'balance', 'status'] },
+  deposits: { cols: ['id', 'userId', 'amount', 'status', 'createdAt'] },
+  withdrawals: { cols: ['id', 'userId', 'amount', 'status', 'createdAt'] },
+  bets: { cols: ['id', 'userId', 'game', 'amount', 'result'] },
+  games: { cols: ['id', 'name', 'enabled', 'config'] },
+  settings: { cols: ['key', 'value'] },
+};
+
+const SEED = {
+  users: [
+    { id: 1, phone: '+919900000001', balance: 1250, status: 'active' },
+    { id: 2, phone: '+919900000002', balance: 380, status: 'active' },
+    { id: 3, phone: '+919900000003', balance: 0, status: 'blocked' },
+  ],
+  deposits: [
+    { id: 1, userId: 1, amount: 500, status: 'approved', createdAt: '2026-11-27 10:12' },
+    { id: 2, userId: 2, amount: 200, status: 'pending', createdAt: '2026-11-27 11:40' },
+  ],
+  withdrawals: [
+    { id: 1, userId: 1, amount: 300, status: 'paid', createdAt: '2026-11-26 18:05' },
+  ],
+  bets: [
+    { id: 1, userId: 1, game: 'Lucky Wheel', amount: 100, result: 'win' },
+    { id: 2, userId: 2, game: 'Crash', amount: 50, result: 'loss' },
+  ],
+  games: [
+    { id: 1, name: 'Lucky Wheel', enabled: 'yes', config: 'default' },
+    { id: 2, name: 'Plinko', enabled: 'yes', config: 'default' },
+    { id: 3, name: 'Roulette', enabled: 'no', config: 'default' },
+  ],
+  settings: [
+    { key: 'appName', value: 'XPay' },
+    { key: 'minDeposit', value: '100' },
+    { key: 'support', value: 'admin' },
+  ],
 };
 
 const AUTH_USER = 'admin';
-const AUTH_HASH = '07996431636d427da4dcec62a8ad530932b776f0ae37a3287cdf308bfb669c06'; // SHA-256 of XPayAdmin@2026
+const AUTH_HASH = '07996431636d427da4dcec62a8ad530932b776f0ae37a3287cdf308bfb669c06'; // XPayAdmin@2026
+const DEMO_KEY = 'xpay-demo-data';
 
 const $ = (id) => document.getElementById(id);
 let cfg = JSON.parse(localStorage.getItem('xpay-admin') || '{}');
 let section = 'users';
 
-$('apiBase').value = cfg.apiBase || '';
-$('token').value = cfg.token || '';
 $('user').value = cfg.user || '';
 
 async function sha256(text) {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function showApp() { $('login').classList.add('hidden'); $('app').classList.remove('hidden'); }
 
 $('loginBtn').onclick = async () => {
   $('loginError').textContent = '';
   const user = $('user').value.trim();
   const pass = $('pass').value;
-  const apiBase = $('apiBase').value.trim();
   if (user !== AUTH_USER || (await sha256(pass)) !== AUTH_HASH) {
     $('loginError').textContent = 'Invalid username or password.';
     return;
   }
-  cfg = { apiBase, token: $('token').value.trim(), user };
+  cfg = { user };
   localStorage.setItem('xpay-admin', JSON.stringify(cfg));
   showApp();
   load();
@@ -41,6 +69,7 @@ $('loginBtn').onclick = async () => {
 
 $('logout').onclick = () => { localStorage.removeItem('xpay-admin'); location.reload(); };
 $('refresh').onclick = load;
+$('addRow').onclick = addRow;
 
 document.querySelectorAll('nav button').forEach((b) => {
   b.onclick = () => {
@@ -52,32 +81,54 @@ document.querySelectorAll('nav button').forEach((b) => {
   };
 });
 
-async function api(path, options = {}) {
-  const res = await fetch(cfg.apiBase.replace(/\/$/, '') + path, {
-    ...options,
-    headers: { Authorization: 'Bearer ' + cfg.token, 'Content-Type': 'application/json', ...(options.headers || {}) },
-  });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
-}
-
-async function load() {
-  const def = SECTIONS[section];
-  $('thead').innerHTML = '<tr>' + def.cols.map((c) => '<th>' + c + '</th>').join('') + '</tr>';
-  $('tbody').innerHTML = '';
-  $('conn').textContent = 'Connecting..';
-  $('sectionInfo').textContent = 'Loading ' + def.path + '…';
-  try {
-    const data = await api(def.path);
-    const rows = Array.isArray(data) ? data : (data.data || data.list || []);
-    $('tbody').innerHTML = rows.map((r) => '<tr>' + def.cols.map((c) => '<td>' + (r[c] ?? '') + '</td>').join('') + '</tr>').join('')
-      || '<tr><td colspan="' + def.cols.length + '">No data returned by your API.</td></tr>';
-    $('sectionInfo').textContent = rows.length + ' record(s) from ' + def.path;
-    $('conn').textContent = 'online';
-  } catch (e) {
-    $('conn').textContent = 'Offline';
-    $('sectionInfo').textContent = 'Last error: ' + e.message + ' — configure your backend at ' + def.path;
+function demoData() {
+  let data = JSON.parse(localStorage.getItem(DEMO_KEY) || 'null');
+  if (!data) {
+    data = JSON.parse(JSON.stringify(SEED));
+    localStorage.setItem(DEMO_KEY, JSON.stringify(data));
   }
+  return data;
+}
+function saveDemo(data) { localStorage.setItem(DEMO_KEY, JSON.stringify(data)); }
+
+function render(rows) {
+  const head = SECTIONS[section].cols.concat('Actions');
+  $('thead').innerHTML = '<tr>' + head.map((c) => '<th>' + esc(c) + '</th>').join('') + '</tr>';
+  $('tbody').innerHTML = rows.map((r, i) =>
+    '<tr>' + SECTIONS[section].cols.map((c) => '<td>' + esc(r[c]) + '</td>').join('') +
+    '<td><button class="danger" data-index="' + i + '">Delete</button></td></tr>'
+  ).join('') || '<tr><td colspan="' + head.length + '">No records yet.</td></tr>';
+  $('sectionInfo').textContent = rows.length + ' record(s) — stored only in this browser.';
+  $('conn').textContent = 'Demo';
 }
 
-// Do not auto-login: the backend password must be entered each time.
+function load() {
+  const rows = demoData()[section] || [];
+  render(rows);
+}
+
+function addRow() {
+  const row = {};
+  for (const col of SECTIONS[section].cols) {
+    const value = prompt(col);
+    if (value === null) return;
+    row[col] = value;
+  }
+  const data = demoData();
+  (data[section] ||= []).push(row);
+  saveDemo(data);
+  load();
+}
+
+$('tbody').addEventListener('click', (e) => {
+  if (!e.target.classList.contains('danger')) return;
+  const index = Number(e.target.dataset.index);
+  const data = demoData();
+  const rows = data[section] || [];
+  const record = rows[index];
+  if (!record) return;
+  if (!confirm('Delete record ' + (record.id ?? record.key) + '?')) return;
+  rows.splice(index, 1);
+  saveDemo(data);
+  load();
+});
