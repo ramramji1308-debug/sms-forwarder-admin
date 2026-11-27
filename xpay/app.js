@@ -46,22 +46,18 @@ let section = 'users';
 
 $('user').value = cfg.user || '';
 
-async function sha256(text) {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function showApp() { $('login').classList.add('hidden'); $('app').classList.remove('hidden'); }
 
-$('loginBtn').onclick = async () => {
+$('loginBtn').onclick = () => {
   $('loginError').textContent = '';
-  const user = $('user').value.trim();
-  const pass = $('pass').value;
-  if (user !== AUTH_USER || (await sha256(pass)) !== AUTH_HASH) {
+  const user = $('user').value.trim().toLowerCase();
+  const pass = $('pass').value.trim();
+  if (user !== AUTH_USER || pass !== AUTH_PASS) {
     $('loginError').textContent = 'Invalid username or password.';
     return;
   }
-  cfg = { user };
+  cfg = { user: AUTH_USER };
   localStorage.setItem('xpay-admin', JSON.stringify(cfg));
   showApp();
   load();
