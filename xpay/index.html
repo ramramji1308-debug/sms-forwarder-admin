@@ -9,16 +9,12 @@
 <body>
   <div id="login" class="card">
     <h1>XPay Admin</h1>
-    <p>Connect to your XPay backend to control app data.</p>
-    <label>API base URL</label>
-    <input id="apiBase" placeholder="https://api.xpay-app.com/app"/>
-    <label>Admin token</label>
-    <input id="token" type="password" placeholder="Bearer token"/>
+    <p>Sign in with username and password. Data is kept in this browser.</p>
     <label>Username</label>
     <input id="user" placeholder="admin"/>
     <label>Password</label>
     <input id="pass" type="password"/>
-    <button id="loginBtn">Connect</button>
+    <button id="loginBtn">Sign in</button>
     <p id="loginError" class="error"></p>
   </div>
 
@@ -26,9 +22,9 @@
     <header>
       <h1>XPay Admin</h1>
       <div>
-        <span id="conn">Offline</span>
+        <span id="conn">Demo</span>
         <button id="refresh">Refresh</button>
-        <button id="logout">Disconnect</button>
+        <button id="logout">Sign out</button>
       </div>
     </header>
     <nav>
@@ -42,11 +38,12 @@
     <section id="panel">
       <div class="card">
         <h2 id="sectionTitle">Users</h2>
-        <p id="sectionInfo" class="muted">Loading data from your API…</p>
+        <p id="sectionInfo" class="muted">Loading data…</p>
+        <button id="addRow">Add record</button>
         <table><thead id="thead"></thead><tbody id="tbody"></tbody></table>
       </div>
     </section>
   </div>
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
